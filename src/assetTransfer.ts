@@ -1,7 +1,7 @@
 import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
 import { Asset } from './asset';
 
-@Info({ title: 'AssetTransfer', description: 'Smart contract for trading assets' })
+@Info({title: 'AssetTransfer', description: 'Smart contract for trading assets'})
 export class AssetTransferContract extends Contract {
 
   @Transaction()
@@ -82,7 +82,27 @@ export class AssetTransferContract extends Contract {
         console.log(err);
         record = strValue;
       }
-      allResults.push({ key: result.value.key, record });
+      allResults.push({key: result.value.key, record});
+      result = await iterator.next();
+    }
+    return JSON.stringify(allResults);
+  }
+
+  @Transaction(false)
+  public async GetAssetHistory(ctx: Context, id: string): Promise<string> {
+    const allResults = [];
+    const iterator = await ctx.stub.getHistoryForKey(id);
+    let result = await iterator.next();
+    while (!result.done) {
+      const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
+      let record;
+      try {
+        record = JSON.parse(strValue);
+      } catch (err) {
+        console.log(err);
+        record = strValue;
+      }
+      allResults.push(record);
       result = await iterator.next();
     }
     return JSON.stringify(allResults);
